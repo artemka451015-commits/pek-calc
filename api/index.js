@@ -1,15 +1,12 @@
 export default async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
   
   if (req.method === 'GET') {
-    return res.json({ status: 'OK', message: 'Vercel API работает' });
+    return res.json({ status: 'OK', service: 'PEK Calculator' });
   }
   
   if (req.method === 'POST') {
@@ -22,15 +19,9 @@ export default async function handler(req, res) {
       
       const PEK_KEY = 'A512306B7F9C1141A85AC978044CC7765DF22686';
       
-      // Ищем город в ПЭК
       const cityRes = await fetch(
         'https://api.pecom.ru/v1/cities?name=' + encodeURIComponent(city),
-        {
-          headers: {
-            'Authorization': 'Bearer ' + PEK_KEY,
-            'Content-Type': 'application/json'
-          }
-        }
+        { headers: { 'Authorization': 'Bearer ' + PEK_KEY, 'Content-Type': 'application/json' }}
       );
       
       const cityData = await cityRes.json();
@@ -41,21 +32,14 @@ export default async function handler(req, res) {
       
       const cityId = cityData.items[0].id;
       
-      // Считаем доставку
       const calcRes = await fetch('https://api.pecom.ru/v1/calculate', {
         method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + PEK_KEY,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Authorization': 'Bearer ' + PEK_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sender_city_id: 86,
           receiver_city_id: cityId,
           weight: parseFloat(weight),
-          places: [{
-            weight: parseFloat(weight),
-            volume: 0.001
-          }]
+          places: [{ weight: parseFloat(weight), volume: 0.001 }]
         })
       });
       
@@ -68,9 +52,9 @@ export default async function handler(req, res) {
       });
       
     } catch (err) {
-      return res.json({ error: 'Ошибка: ' + err.message, price: null });
+      return res.json({ error: err.message, price: null });
     }
   }
   
-  return res.status(405).json({ error: 'Method not allowed' });
+  res.status(405).json({ error: 'Method not allowed' });
 }
